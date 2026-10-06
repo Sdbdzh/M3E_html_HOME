@@ -49,14 +49,14 @@
 git clone https://github.com/Sdbdzh/M3E_html_HOME.git
 cd M3E_html_HOME
 
-###2. 准备素材
+### 2. 准备素材
 在项目根目录准备以下文件（或修改配置中的路径指向你的文件）：
 
 头像：命名为 tx.jpg（支持 jpg / png / webp）。
 
 网站图标：命名为 favicon.ico（支持 ico / png / svg）。
 
-###3. 本地预览
+### 3. 本地预览
 直接双击打开 index.html 即可在浏览器中查看效果。
 
 
