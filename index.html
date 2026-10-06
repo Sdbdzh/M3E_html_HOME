@@ -32,8 +32,8 @@
             --md-sys-elevation-1: 0 4px 12px rgba(152, 64, 97, 0.08);
             --md-sys-elevation-2: 0 8px 24px rgba(152, 64, 97, 0.12);
 
-            --card-charge-brightness: 1.15;
-            --wave-color: rgba(152, 64, 97, 0.15);
+            --card-charge-brightness: 1.15; /* 浅色模式下卡片充能亮度提升倍数 */
+            --wave-color: rgba(152, 64, 97, 0.15); /* 浅色模式下充能波纹颜色 */
         }
 
         :root[data-theme="dark"] {
@@ -58,8 +58,8 @@
             --md-sys-elevation-1: 0 4px 12px rgba(0, 0, 0, 0.4);
             --md-sys-elevation-2: 0 8px 24px rgba(0, 0, 0, 0.5);
 
-            --card-charge-brightness: 1.3;
-            --wave-color: rgba(255, 176, 201, 0.25);
+            --card-charge-brightness: 1.3; /* 深色模式下卡片充能亮度提升倍数，比浅色模式更亮 */
+            --wave-color: rgba(255, 176, 201, 0.25); /* 深色模式下充能波纹颜色 */
         }
 
         /* =========================================
@@ -76,6 +76,7 @@
             overflow-x: hidden;
             transition: background-color 0.4s cubic-bezier(0.2, 0, 0, 1), color 0.4s cubic-bezier(0.2, 0, 0, 1);
             
+            /* 全局禁用文本高亮，防止连续点击时出现蓝色选中块 */
             -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
         }
 
@@ -83,14 +84,14 @@
             width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px;
             padding-top: 60px; 
             position: relative;
-            z-index: 1;
+            z-index: 1; /* 保证内容在背景图片之上 */
         }
 
-        /* 背景图片层 */
+        /* 背景图片层（双图层交叉淡入淡出，防止切换闪烁） */
         .bg-layer {
             position: fixed;
             top: -5%; left: -5%; 
-            width: 110vw; height: 110vh;
+            width: 110vw; height: 110vh; /* 放大一点，防止模糊后边缘露出白边 */
             z-index: -1;
             background-repeat: no-repeat;
             background-position: center;
@@ -102,7 +103,7 @@
         }
         .bg-layer.active { opacity: var(--bg-opacity, 1); }
 
-        /* 启动时的水波纹 */
+        /* 启动时底部充能光晕 */
         .startup-overlay {
             position: fixed; bottom: -50vmax; left: 50%;
             transform: translate(-50%, 0) scale(0.1); width: 100vmax; height: 100vmax;
@@ -115,7 +116,7 @@
             100% { transform: translate(-50%, -20vmax) scale(2.5); opacity: 0; }
         }
 
-        /* 点击头像时的水波纹 */
+        /* 点击头像时扩散的波纹 */
         .avatar-wave-overlay {
             position: fixed; border-radius: 50%;
             background: radial-gradient(circle, var(--wave-color) 0%, transparent 70%);
@@ -129,11 +130,14 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
         }
 
-        /* 卡片初始状态与过渡 */
+        /* 卡片初始状态与过渡动画 */
         .m3-card {
             background-color: var(--md-sys-color-surface-container); border-radius: 28px; padding: 24px; 
             display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
-            opacity: 0; transform: translateY(60px);
+            
+            opacity: 0; /* 初始隐藏 */
+            transform: translateY(60px); /* 初始下沉 */
+            
             transition: 
                 opacity 0.8s cubic-bezier(0.2, 0, 0, 1), 
                 transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275),
@@ -143,6 +147,7 @@
         }
         .m3-card.appeared { opacity: 1; transform: translateY(0); }
 
+        /* 卡片内部文字初始隐藏，等待充能后再交错浮现 */
         .m3-card > *:not(.ripple) {
             opacity: 0; transform: translateY(10px);
             transition: opacity 0.5s cubic-bezier(0.2, 0, 0, 1), transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -151,28 +156,38 @@
         .m3-card.charged > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
         .m3-card.charged > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
         .m3-card.charged > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
-        .m3-card.charging { filter: brightness(var(--card-charge-brightness)); box-shadow: 0 0 20px var(--md-sys-color-primary-container); }
 
-        /* 个人资料区 */
+        /* 卡片充能时的亮度和外发光 */
+        .m3-card.charging { 
+            filter: brightness(var(--card-charge-brightness)); 
+            box-shadow: 0 0 20px var(--md-sys-color-primary-container);
+        }
+
+        /* =========================================
+           个人资料区
+           ========================================= */
         .profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px 0 24px 0; }
         
+        /* 头像初始状态：缩小、模糊、透明 */
         .avatar-box {
             width: 120px; height: 120px; border-radius: 50%; overflow: hidden; margin-bottom: 16px;
             border: 4px solid var(--md-sys-color-surface-container); background-color: var(--md-sys-color-surface-container);
             opacity: 0; transform: scale(0.6); filter: blur(12px);
             transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease, border-color 0.3s, box-shadow 0.3s;
-            cursor: pointer;
+            cursor: pointer; /* 提示可点击 */
         }
         .avatar-box.show { opacity: 1; transform: scale(1); filter: blur(0); }
         .avatar-box:hover { transform: translateY(-4px) scale(1.05); border-color: var(--md-sys-color-primary); box-shadow: var(--md-sys-elevation-1); }
         .avatar-box:active { transform: translateY(0) scale(0.95); }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
 
+        /* 名字和签名初始隐藏，等待打字机触发 */
         .profile-header h1, .profile-header .subtitle {
             visibility: hidden; display: flex; align-items: center; justify-content: center; min-height: 1.2em;
         }
         .profile-header h1.typing-active, .profile-header .subtitle.typing-active { visibility: visible; }
         
+        /* 打字机光标 */
         .cursor {
             display: inline-block; width: 2px; height: 1.1em; background-color: var(--md-sys-color-primary);
             margin-left: 6px; animation: blink 0.75s step-end infinite;
@@ -181,10 +196,25 @@
         .profile-header h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
         .profile-header .subtitle { font-size: 15px; color: var(--md-sys-color-on-surface-variant); }
 
-        /* 内容区块 */
+        /* =========================================
+           内容区块通用样式
+           ========================================= */
         .m3-card-title { font-size: 14px; font-weight: 600; color: var(--md-sys-color-primary); letter-spacing: 0.5px; text-transform: uppercase; }
         .m3-card-content { font-size: 15px; line-height: 1.6; color: var(--md-sys-color-on-surface); }
 
+        /* 关于我卡片内的链接样式 */
+        .m3-card-content a {
+            color: var(--md-sys-color-primary);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px dashed var(--md-sys-color-primary);
+            transition: opacity 0.2s;
+        }
+        .m3-card-content a:hover {
+            opacity: 0.7;
+        }
+
+        /* 标签药丸 */
         .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
         .m3-chip {
             background-color: transparent; border: 1px solid var(--md-sys-color-outline);
@@ -193,6 +223,27 @@
         }
         .m3-chip:hover { background-color: var(--md-sys-color-state-layer); border-color: var(--md-sys-color-primary); }
 
+        /* 技术栈徽章容器 */
+        .badges-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .badges-container a {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+        }
+        .badges-container a:hover {
+            transform: translateY(-3px);
+            opacity: 0.85;
+        }
+        .tech-badge {
+            height: 28px; /* 徽章统一高度 */
+            display: block;
+        }
+
+        /* 链接列表 */
         .m3-list { display: flex; flex-direction: column; margin-top: 8px; }
         .m3-list-item {
             display: flex; justify-content: space-between; align-items: center;
@@ -208,30 +259,18 @@
         .m3-list-item .arrow { color: var(--md-sys-color-on-surface-variant); font-family: monospace; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s; }
         .m3-list-item:hover .arrow { transform: translateX(6px); color: var(--md-sys-color-primary); }
 
-        /* =========================================
-           联系方式 (列表形式的新样式)
-           ========================================= */
+        /* 联系方式列表（允许选中复制） */
         .contact-list {
             display: flex; flex-direction: column; gap: 12px; margin-top: 4px;
-            -webkit-user-select: text; user-select: text; /* 允许选中复制 */
+            -webkit-user-select: text; user-select: text; 
         }
-        .contact-item {
-            display: flex; align-items: baseline; gap: 8px; font-size: 14px;
-        }
-        .contact-label {
-            color: var(--md-sys-color-on-surface-variant); min-width: 48px;
-            font-weight: 500; flex-shrink: 0;
-        }
-        .contact-value {
-            color: var(--md-sys-color-on-surface); word-break: break-all;
-        }
-        .contact-value a {
-            color: var(--md-sys-color-primary); text-decoration: none;
-            font-weight: 500; transition: opacity 0.2s;
-        }
+        .contact-item { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
+        .contact-label { color: var(--md-sys-color-on-surface-variant); min-width: 48px; font-weight: 500; flex-shrink: 0; }
+        .contact-value { color: var(--md-sys-color-on-surface); word-break: break-all; }
+        .contact-value a { color: var(--md-sys-color-primary); text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
         .contact-value a:hover { opacity: 0.8; }
 
-        /* 水波纹反馈 */
+        /* 点击水波纹反馈 */
         .ripple {
             position: absolute; border-radius: 50%; transform: scale(0);
             animation: ripple-anim 600ms cubic-bezier(0.2, 0, 0, 1) forwards;
@@ -239,7 +278,9 @@
         }
         @keyframes ripple-anim { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        /* 设置按钮与面板 */
+        /* =========================================
+           设置按钮与面板
+           ========================================= */
         .fab-settings {
             position: fixed; top: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
             background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
@@ -281,14 +322,19 @@
 </head>
 <body>
 
+    <!-- 背景图片层 -->
     <div class="bg-layer" id="bgLayer1"></div>
     <div class="bg-layer" id="bgLayer2"></div>
+
+    <!-- 启动时底部充能波纹 -->
     <div class="startup-overlay" id="startupOverlay"></div>
 
+    <!-- 右上角设置按钮 -->
     <button class="fab-settings" id="settingsBtn" aria-label="打开设置">
         <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     </button>
 
+    <!-- 设置面板 -->
     <div class="settings-panel" id="settingsPanel">
         <div>
             <div class="panel-title">外观主题</div>
@@ -300,91 +346,45 @@
         </div>
     </div>
 
+    <!-- 主内容区 -->
     <div class="app-container" id="appContainer"></div>
 
+    <!-- =========================================
+         网站配置文件（必须放在主脚本之前）
+         ========================================= -->
+    <script src="./config.js"></script>
+
+    <!-- =========================================
+         主逻辑脚本
+         ========================================= -->
     <script>
-        /* =================================================================
-           ★★★ 1. 所有可修改的参数集中在这里（你只需要改这个区域！） ★★★
-           ================================================================= */
-        const SITE_CONFIG = {
-            site: {
-                name: "Enikawa_Official",
-                favicon: "./favicon.ico"
-            },
-            background: {
-                enable: true,
-                images: [
-                    "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop"
-                ], 
-                interval: 5,
-                blur: 5,
-                opacity: 0.15,
-                fit: "cover" // cover / contain / auto / fill
-            },
-            profile: {
-                name: "Enikawa_Official",
-                nameTypeSpeed: 100,
-                nameCursorDelay: 1000,
-                avatarSrc: "./tx.jpg",
-                signaturePause: 2,
-                signatureTypeSpeed: 60,
-                signatureDeleteSpeed: 30,
-                signatures: [
-                    "[预设签名 1，带点极客风格]",
-                    "[热爱代码与生活的开发者]",
-                    "[你的签名 / 职业 / 个人格言]"
-                ]
-            },
-            
-            // 卡片配置（注意：联系方式改成全新的列表格式了！）
-            cards: [
-                {
-                    title: "关于我",
-                    type: "text", 
-                    content: "[在这里写下关于你自己的介绍。爱好是什么？最近在做什么？随便写，这里是你的地盘。]"
-                },
-                {
-                    title: "兴趣与偏好",
-                    type: "chips", 
-                    content: ["[爱好 1]", "[爱好 2]", "[爱好 3]", "[爱好 4]", "[爱好 5]"]
-                },
-                {
-                    title: "网站导航",
-                    type: "list", 
-                    content: [
-                        { name: "[你的 GitHub]", url: "https://github.com/sdbdzh" },
-                        { name: "[你的博客]", url: "#" },
-                        { name: "[你的 Bilibili]", url: "#" }
-                    ]
-                },
-                {
-                    title: "联系方式",
-                    type: "contact", 
-                    // 【新格式】用数组对象来表示，name 是标签（如邮箱、微信），value 是内容，link 是可选链接
-                    content: [
-                        { name: "邮箱", value: "your@email.com", link: "mailto:your@email.com" },
-                        { name: "微信", value: "your_wechat_id" },
-                        { name: "QQ", value: "123456789" }
-                    ]
-                }
-            ]
-        };
-        /* ================================================================= */
+        /* =========================================
+           0. 配置兜底检查
+           ========================================= */
+        if (typeof SITE_CONFIG === 'undefined') {
+            console.error('❌ 未找到 SITE_CONFIG，请检查 config.js 是否正确引入。');
+            document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;">' +
+                '<h2>配置加载失败</h2>' +
+                '<p>请确认根目录下存在 <code>config.js</code>，并在 index.html 中正确引入。</p></div>';
+            throw new Error('SITE_CONFIG is not defined');
+        }
 
         /* =========================================
-           2. 以下全是引擎代码，不需要修改
+           1. 以下全是引擎代码，不需要修改
            ========================================= */
         
+        // --- 渲染页面内容 ---
         function renderPage() {
             const container = document.getElementById('appContainer');
             const { site, profile, cards } = SITE_CONFIG;
             
+            // 动态设置网站标题和图标
             if (site) {
                 if (site.name) document.getElementById('pageTitle').innerText = site.name;
                 if (site.favicon) document.getElementById('pageFavicon').href = site.favicon;
             }
 
+            // 生成个人资料 HTML
             let profileHTML = `
                 <div class="profile-header">
                     <div class="avatar-box" id="avatarBox">
@@ -395,6 +395,7 @@
                 </div>
             `;
             
+            // 生成卡片 HTML
             let cardsHTML = '';
             cards.forEach(card => {
                 cardsHTML += `<div class="m3-card">`;
@@ -408,21 +409,32 @@
                         cardsHTML += `<span class="m3-chip">${chip}</span>`;
                     });
                     cardsHTML += `</div>`;
+                } else if (card.type === 'badges') {
+                    // 技术栈徽章：显示 shields.io 徽章图片，可选添加链接
+                    cardsHTML += `<div class="badges-container">`;
+                    card.content.forEach(item => {
+                        const imgTag = `<img src="${item.img}" alt="${item.name}" class="tech-badge">`;
+                        if (item.url) {
+                            cardsHTML += `<a href="${item.url}" target="_blank" rel="noopener">${imgTag}</a>`;
+                        } else {
+                            cardsHTML += imgTag;
+                        }
+                    });
+                    cardsHTML += `</div>`;
                 } else if (card.type === 'list') {
                     cardsHTML += `<div class="m3-list">`;
                     card.content.forEach(item => {
-                        cardsHTML += `<a href="${item.url}" class="m3-list-item" target="_blank"><span>${item.name}</span><span class="arrow">-></span></a>`;
+                        cardsHTML += `<a href="${item.url}" class="m3-list-item" target="_blank" rel="noopener"><span>${item.name}</span><span class="arrow">-></span></a>`;
                     });
                     cardsHTML += `</div>`;
                 } else if (card.type === 'contact') {
-                    // 【新逻辑】遍历数组，自动生成列表
                     cardsHTML += `<div class="contact-list">`;
                     card.content.forEach(item => {
                         cardsHTML += `<div class="contact-item">`;
                         cardsHTML += `<span class="contact-label">${item.name}：</span>`;
                         cardsHTML += `<span class="contact-value">`;
                         if (item.link) {
-                            cardsHTML += `<a href="${item.link}" target="_blank">${item.value}</a>`;
+                            cardsHTML += `<a href="${item.link}" target="_blank" rel="noopener">${item.value}</a>`;
                         } else {
                             cardsHTML += item.value;
                         }
@@ -437,14 +449,16 @@
             container.innerHTML = profileHTML + cardsHTML;
         }
 
-        // --- 背景图片初始化与轮播逻辑 ---
+        // --- 背景图片初始化与轮播逻辑（双图层交叉淡入淡出） ---
         function initBackground() {
             const bgConfig = SITE_CONFIG.background;
             if (!bgConfig || !bgConfig.enable || !bgConfig.images || bgConfig.images.length === 0) return;
 
+            // 将配置的透明度和模糊度写入 CSS 变量
             document.documentElement.style.setProperty('--bg-opacity', bgConfig.opacity);
             document.documentElement.style.setProperty('--bg-blur', `${bgConfig.blur}px`);
 
+            // 映射对齐方式
             const fitMap = {
                 "cover": "cover", "contain": "contain", "auto": "auto", "fill": "100% 100%"
             };
@@ -459,16 +473,19 @@
                 layer.style.backgroundSize = bgSize;
             }
 
+            // 初始化第一张图
             setLayerImage(layers[currentLayer], currentIndex);
             layers[currentLayer].classList.add('active');
 
+            // 如果有多张图，开启轮播
             if (bgConfig.images.length > 1) {
                 setInterval(() => {
                     const nextIndex = (currentIndex + 1) % bgConfig.images.length;
-                    const nextLayer = 1 - currentLayer;
+                    const nextLayer = 1 - currentLayer; // 0 和 1 交替
                     
                     setLayerImage(layers[nextLayer], nextIndex);
                     
+                    // 等待极短时间，让浏览器渲染出图片，然后交叉淡入淡出
                     setTimeout(() => {
                         layers[currentLayer].classList.remove('active');
                         layers[nextLayer].classList.add('active');
@@ -502,7 +519,7 @@
             applyTheme();
         }
 
-        // --- 设置面板逻辑 ---
+        // --- 设置面板开关逻辑 ---
         function initSettingsPanel() {
             const fab = document.getElementById('settingsBtn');
             const panel = document.getElementById('settingsPanel');
@@ -510,12 +527,14 @@
             document.addEventListener('click', (e) => { if (!panel.contains(e.target) && !fab.contains(e.target)) panel.classList.remove('show'); });
         }
 
-        // --- 点击水波纹逻辑 ---
+        // --- 点击水波纹逻辑（精确触发） ---
         function initRipple() {
             const rippleTargets = document.querySelectorAll('.m3-card, .m3-chip, .m3-list-item, .theme-btn, .fab-settings, .settings-panel');
             rippleTargets.forEach(el => {
                 el.addEventListener('pointerdown', function(e) {
-                    if (this.classList.contains('m3-card') && e.target.closest('.m3-chip, .m3-list-item, .contact-item')) return; 
+                    // 拦截：如果点击的是卡片内部的标签、列表、徽章或联系方式，不触发卡片背景的水波纹
+                    if (this.classList.contains('m3-card') && e.target.closest('.m3-chip, .m3-list-item, .contact-item, .badges-container')) return; 
+                    // 拦截：如果点击的是设置面板内部的按钮，不触发面板背景的水波纹
                     if (this.classList.contains('settings-panel') && e.target.closest('.theme-btn')) return; 
 
                     const rect = this.getBoundingClientRect();
@@ -534,7 +553,7 @@
             });
         }
 
-        // --- 打字机逻辑 ---
+        // --- 名字打字机 ---
         function typeName(element, text, speed, cursorDelay) {
             element.classList.add('typing-active');
             element.innerHTML = '';
@@ -551,12 +570,14 @@
                     i++;
                     setTimeout(type, speed);
                 } else {
+                    // 名字打完后，延迟指定时间移除光标
                     setTimeout(() => { cursor.remove(); }, cursorDelay);
                 }
             }
             type();
         }
 
+        // --- 签名循环打字机（打字 -> 等待 -> 删除 -> 切换下一个 -> 循环） ---
         function loopSignatures(element, texts, typeSpeed, deleteSpeed, pauseTimeMs) {
             element.classList.add('typing-active');
             element.innerHTML = '';
@@ -572,19 +593,22 @@
                 const currentText = texts[textIndex];
                 
                 if (isDeleting) {
+                    // 删除文字
                     charIndex--;
                     textSpan.textContent = currentText.substring(0, charIndex);
                     if (charIndex === 0) {
                         isDeleting = false;
                         textIndex = (textIndex + 1) % texts.length;
-                        setTimeout(process, 600);
+                        setTimeout(process, 600); // 切换到下一个文本时的短暂停顿
                     } else {
                         setTimeout(process, deleteSpeed);
                     }
                 } else {
+                    // 打印文字
                     charIndex++;
                     textSpan.textContent = currentText.substring(0, charIndex);
                     if (charIndex === currentText.length) {
+                        // 打印完成，等待 pauseTimeMs 毫秒后开始删除
                         isDeleting = true;
                         setTimeout(process, pauseTimeMs); 
                     } else {
@@ -595,7 +619,7 @@
             process();
         }
 
-        // --- 点击头像触发水波纹并点亮元素 ---
+        // --- 点击头像触发充能波纹并点亮周围元素 ---
         function initAvatarWave() {
             const avatarBox = document.getElementById('avatarBox');
             const cards = document.querySelectorAll('.m3-card');
@@ -609,6 +633,7 @@
                 const existingWave = document.querySelector('.avatar-wave-overlay');
                 if (existingWave) existingWave.remove();
 
+                // 计算最大半径，确保波纹能覆盖到屏幕边缘
                 const maxDistance = Math.max(
                     Math.hypot(centerX, centerY),
                     Math.hypot(window.innerWidth - centerX, centerY),
@@ -617,6 +642,7 @@
                 );
                 const diameter = maxDistance * 2;
 
+                // 创建波纹元素
                 const wave = document.createElement('div');
                 wave.className = 'avatar-wave-overlay animate';
                 wave.style.width = `${diameter}px`;
@@ -626,21 +652,23 @@
                 
                 document.body.appendChild(wave);
 
-                const duration = 1200;
-                const targets = [...cards, fabSettings];
+                const duration = 1200; // 波纹动画时长
+                const targets = [...cards, fabSettings]; // 被点亮的元素集合
                 targets.forEach(target => {
                     const targetRect = target.getBoundingClientRect();
                     const targetCenterX = targetRect.left + targetRect.width / 2;
                     const targetCenterY = targetRect.top + targetRect.height / 2;
                     
+                    // 计算元素中心距离头像中心的距离
                     const distance = Math.hypot(targetCenterX - centerX, targetCenterY - centerY);
                     
                     if (distance <= maxDistance) {
+                        // 计算被波纹扫到的延迟时间
                         const delay = (distance / maxDistance) * duration;
                         
                         setTimeout(() => {
                             target.classList.add('charging');
-                            setTimeout(() => { target.classList.remove('charging'); }, 800);
+                            setTimeout(() => { target.classList.remove('charging'); }, 800); // 充能时长
                         }, delay);
                     }
                 });
@@ -649,7 +677,7 @@
             });
         }
 
-        // --- 启动动画时间轴 ---
+        // --- 启动动画时间轴（核心逻辑） ---
         function startAnimationTimeline() {
             setTimeout(() => {
                 const overlay = document.getElementById('startupOverlay');
@@ -657,27 +685,38 @@
                 const fabSettings = document.getElementById('settingsBtn');
                 const screenHeight = window.innerHeight;
                 
+                // 启动底部水波纹
                 overlay.classList.add('animate');
                 
                 let maxDelay = 0;
 
+                // 阶段一：卡片从下往上依次出现，并与水波纹同步
                 cards.forEach(card => {
                     const rect = card.getBoundingClientRect();
                     const distanceFromBottom = screenHeight - rect.bottom;
                     
+                    // 计算延迟时间（映射到 1200ms 内，水波纹总时长 1400ms）
                     const delay = Math.max(0, Math.min(1200, (distanceFromBottom / screenHeight) * 1400));
                     if (delay > maxDelay) maxDelay = delay;
 
                     setTimeout(() => {
+                        // 1. 卡片升起浮现
                         card.classList.add('appeared');
+                        
+                        // 2. 延迟 150ms 触发亮度提升（模拟波纹扫过）
                         setTimeout(() => {
                             card.classList.add('charging');
+                            
+                            // 3. 亮度提升后，文字交错浮现
                             setTimeout(() => { card.classList.add('charged'); }, 300);
+
+                            // 4. 亮度动画结束，恢复原样
                             setTimeout(() => { card.classList.remove('charging'); }, 800);
                         }, 150);
                     }, delay);
                 });
 
+                // 阶段一补充：设置按钮的同步动画（位于屏幕顶部，延迟最大）
                 const fabRect = fabSettings.getBoundingClientRect();
                 const fabDistanceFromBottom = screenHeight - fabRect.bottom;
                 const fabDelay = Math.max(0, Math.min(1200, (fabDistanceFromBottom / screenHeight) * 1400));
@@ -690,6 +729,7 @@
                     }, 150);
                 }, fabDelay);
 
+                // 阶段二：卡片全部完成充能后，显示头像并启动打字机
                 const totalCardsTime = maxDelay + 150 + 800 + 500; 
 
                 setTimeout(() => {
@@ -701,8 +741,10 @@
                         const subtitleEl = document.getElementById('profileSubtitle');
                         const profileConf = SITE_CONFIG.profile;
 
+                        // 打名字
                         typeName(nameEl, profileConf.name, profileConf.nameTypeSpeed, profileConf.nameCursorDelay);
 
+                        // 计算名字耗时，随后启动签名循环
                         const nameTotalTime = (profileConf.name.length * profileConf.nameTypeSpeed) + profileConf.nameCursorDelay + 300;
 
                         setTimeout(() => {
@@ -718,20 +760,20 @@
                             }
                         }, nameTotalTime);
 
-                    }, 800); 
+                    }, 800); // 头像完全显现后，等待 800ms 开始打字
                 }, totalCardsTime);
-            }, 100);
+            }, 100); 
         }
 
         // --- 初始化总入口 ---
         window.addEventListener('DOMContentLoaded', () => {
-            renderPage();          
-            initTheme();           
-            initSettingsPanel();   
-            initRipple();          
-            initAvatarWave(); 
-            initBackground(); 
-            startAnimationTimeline(); 
+            renderPage();             // 渲染页面内容
+            initTheme();              // 初始化主题切换
+            initSettingsPanel();      // 初始化设置面板
+            initRipple();             // 初始化点击水波纹
+            initAvatarWave();         // 初始化头像点击波纹
+            initBackground();         // 初始化背景图片轮播
+            startAnimationTimeline(); // 启动所有加载动画
         });
     </script>
 </body>
