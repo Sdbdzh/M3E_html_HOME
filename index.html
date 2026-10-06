@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 网站标题和图标改为动态设置，避免硬编码 -->
     <title id="pageTitle">加载中...</title>
     <link id="pageFavicon" rel="icon" href="data:,">
     
@@ -83,9 +82,27 @@
         .app-container {
             width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px;
             padding-top: 60px; 
+            position: relative;
+            z-index: 1;
         }
 
-        /* 启动时的水波纹（充能光晕） */
+        /* 背景图片层 */
+        .bg-layer {
+            position: fixed;
+            top: -5%; left: -5%; 
+            width: 110vw; height: 110vh;
+            z-index: -1;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0;
+            pointer-events: none;
+            will-change: opacity;
+            transition: opacity 1.5s ease-in-out;
+            filter: blur(var(--bg-blur, 0px));
+        }
+        .bg-layer.active { opacity: var(--bg-opacity, 1); }
+
+        /* 启动时的水波纹 */
         .startup-overlay {
             position: fixed; bottom: -50vmax; left: 50%;
             transform: translate(-50%, 0) scale(0.1); width: 100vmax; height: 100vmax;
@@ -98,9 +115,7 @@
             100% { transform: translate(-50%, -20vmax) scale(2.5); opacity: 0; }
         }
 
-        /* =========================================
-           点击头像时的水波纹
-           ========================================= */
+        /* 点击头像时的水波纹 */
         .avatar-wave-overlay {
             position: fixed; border-radius: 50%;
             background: radial-gradient(circle, var(--wave-color) 0%, transparent 70%);
@@ -114,13 +129,10 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
         }
 
-        /* =========================================
-           卡片的初始状态与过渡
-           ========================================= */
+        /* 卡片初始状态与过渡 */
         .m3-card {
             background-color: var(--md-sys-color-surface-container); border-radius: 28px; padding: 24px; 
             display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
-            
             opacity: 0; transform: translateY(60px);
             transition: 
                 opacity 0.8s cubic-bezier(0.2, 0, 0, 1), 
@@ -141,9 +153,7 @@
         .m3-card.charged > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
         .m3-card.charging { filter: brightness(var(--card-charge-brightness)); box-shadow: 0 0 20px var(--md-sys-color-primary-container); }
 
-        /* =========================================
-           个人资料区
-           ========================================= */
+        /* 个人资料区 */
         .profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px 0 24px 0; }
         
         .avatar-box {
@@ -198,9 +208,28 @@
         .m3-list-item .arrow { color: var(--md-sys-color-on-surface-variant); font-family: monospace; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s; }
         .m3-list-item:hover .arrow { transform: translateX(6px); color: var(--md-sys-color-primary); }
 
-        .contact-text { font-size: 14px; color: var(--md-sys-color-on-surface-variant); word-break: break-all; -webkit-user-select: text; user-select: text; }
-        .contact-text a { color: var(--md-sys-color-primary); text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
-        .contact-text a:hover { opacity: 0.8; }
+        /* =========================================
+           联系方式 (列表形式的新样式)
+           ========================================= */
+        .contact-list {
+            display: flex; flex-direction: column; gap: 12px; margin-top: 4px;
+            -webkit-user-select: text; user-select: text; /* 允许选中复制 */
+        }
+        .contact-item {
+            display: flex; align-items: baseline; gap: 8px; font-size: 14px;
+        }
+        .contact-label {
+            color: var(--md-sys-color-on-surface-variant); min-width: 48px;
+            font-weight: 500; flex-shrink: 0;
+        }
+        .contact-value {
+            color: var(--md-sys-color-on-surface); word-break: break-all;
+        }
+        .contact-value a {
+            color: var(--md-sys-color-primary); text-decoration: none;
+            font-weight: 500; transition: opacity 0.2s;
+        }
+        .contact-value a:hover { opacity: 0.8; }
 
         /* 水波纹反馈 */
         .ripple {
@@ -210,20 +239,14 @@
         }
         @keyframes ripple-anim { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        /* =========================================
-           设置按钮
-           ========================================= */
+        /* 设置按钮与面板 */
         .fab-settings {
             position: fixed; top: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
             background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
             border: none; cursor: pointer; display: flex; justify-content: center; align-items: center;
             box-shadow: var(--md-sys-elevation-1); z-index: 1000;
             opacity: 0; transform: scale(0.5) translateY(30px); filter: blur(10px);
-            transition: 
-                opacity 0.8s cubic-bezier(0.2, 0, 0, 1), 
-                transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                filter 0.8s ease,
-                background-color 0.3s, border-radius 0.3s, box-shadow 0.3s;
+            transition: opacity 0.8s cubic-bezier(0.2, 0, 0, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease, background-color 0.3s, border-radius 0.3s, box-shadow 0.3s;
         }
         .fab-settings.appeared { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
         .fab-settings.charging { filter: brightness(var(--card-charge-brightness)); box-shadow: 0 0 20px var(--md-sys-color-primary-container); }
@@ -231,7 +254,6 @@
         .fab-settings.appeared:active { transform: translateY(0) scale(1); }
         .fab-settings svg { width: 24px; height: 24px; fill: currentColor; }
 
-        /* 设置面板 */
         .settings-panel {
             position: fixed; top: 90px; right: 24px; width: 260px;
             background-color: var(--md-sys-color-surface-container-high); border-radius: 24px; padding: 20px;
@@ -259,10 +281,10 @@
 </head>
 <body>
 
-    <!-- 启动充能水波纹 -->
+    <div class="bg-layer" id="bgLayer1"></div>
+    <div class="bg-layer" id="bgLayer2"></div>
     <div class="startup-overlay" id="startupOverlay"></div>
 
-    <!-- 设置按钮与面板 -->
     <button class="fab-settings" id="settingsBtn" aria-label="打开设置">
         <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     </button>
@@ -278,7 +300,6 @@
         </div>
     </div>
 
-    <!-- 主内容区：将由 JS 自动生成 -->
     <div class="app-container" id="appContainer"></div>
 
     <script>
@@ -286,22 +307,29 @@
            ★★★ 1. 所有可修改的参数集中在这里（你只需要改这个区域！） ★★★
            ================================================================= */
         const SITE_CONFIG = {
-            // 网站全局配置（新增）
             site: {
-                name: "Enikawa_Official",            // 浏览器标签页显示的网站名字
-                favicon: "./tx.jpg"              // 网站图标路径（可以是 .ico, .png 等）
+                name: "Enikawa_Official",
+                favicon: "./favicon.ico"
             },
-
-            // 个人资料配置
+            background: {
+                enable: true,
+                images: [
+                    "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop"
+                ], 
+                interval: 5,
+                blur: 5,
+                opacity: 0.15,
+                fit: "cover" // cover / contain / auto / fill
+            },
             profile: {
-                name: "Enikawa_Official",            // 你的名字
-                nameTypeSpeed: 100,                   // 名字打字速度（毫秒/字，越小越快）
-                nameCursorDelay: 1000,                // 名字打完后光标延迟消失时间（毫秒）
-                avatarSrc: "./tx.jpg",                // 头像路径
-                signaturePause: 2,                    // 【核心】签名循环间隔时间（秒，指打完停留几秒后开始删除）
-                signatureTypeSpeed: 60,               // 签名打字速度（毫秒/字）
-                signatureDeleteSpeed: 30,             // 签名删除速度（毫秒/字）
-                // 签名预设（可以写多个，会自动无限循环切换）
+                name: "Enikawa_Official",
+                nameTypeSpeed: 100,
+                nameCursorDelay: 1000,
+                avatarSrc: "./tx.jpg",
+                signaturePause: 2,
+                signatureTypeSpeed: 60,
+                signatureDeleteSpeed: 30,
                 signatures: [
                     "[预设签名 1，带点极客风格]",
                     "[热爱代码与生活的开发者]",
@@ -309,31 +337,36 @@
                 ]
             },
             
-            // 卡片配置（自动生成页面上的所有卡片）
+            // 卡片配置（注意：联系方式改成全新的列表格式了！）
             cards: [
                 {
                     title: "关于我",
-                    type: "text",                     // 类型：普通文本
+                    type: "text", 
                     content: "[在这里写下关于你自己的介绍。爱好是什么？最近在做什么？随便写，这里是你的地盘。]"
                 },
                 {
                     title: "兴趣与偏好",
-                    type: "chips",                    // 类型：标签药丸
+                    type: "chips", 
                     content: ["[爱好 1]", "[爱好 2]", "[爱好 3]", "[爱好 4]", "[爱好 5]"]
                 },
                 {
                     title: "网站导航",
-                    type: "list",                     // 类型：链接列表
+                    type: "list", 
                     content: [
-                        { name: "[你的 GitHub]", url: "https://github.com" },
+                        { name: "[你的 GitHub]", url: "https://github.com/sdbdzh" },
                         { name: "[你的博客]", url: "#" },
                         { name: "[你的 Bilibili]", url: "#" }
                     ]
                 },
                 {
                     title: "联系方式",
-                    type: "contact",                  // 类型：联系方式（此区域文本可选中复制）
-                    content: "邮箱：<a href='mailto:your@email.com'>your@email.com</a><br>微信：your_wechat_id"
+                    type: "contact", 
+                    // 【新格式】用数组对象来表示，name 是标签（如邮箱、微信），value 是内容，link 是可选链接
+                    content: [
+                        { name: "邮箱", value: "your@email.com", link: "mailto:your@email.com" },
+                        { name: "微信", value: "your_wechat_id" },
+                        { name: "QQ", value: "123456789" }
+                    ]
                 }
             ]
         };
@@ -343,18 +376,15 @@
            2. 以下全是引擎代码，不需要修改
            ========================================= */
         
-        // --- 渲染页面内容 ---
         function renderPage() {
             const container = document.getElementById('appContainer');
             const { site, profile, cards } = SITE_CONFIG;
             
-            // 1. 动态设置网站标题和图标
             if (site) {
                 if (site.name) document.getElementById('pageTitle').innerText = site.name;
                 if (site.favicon) document.getElementById('pageFavicon').href = site.favicon;
             }
 
-            // 2. 渲染个人资料区
             let profileHTML = `
                 <div class="profile-header">
                     <div class="avatar-box" id="avatarBox">
@@ -365,7 +395,6 @@
                 </div>
             `;
             
-            // 3. 渲染卡片区
             let cardsHTML = '';
             cards.forEach(card => {
                 cardsHTML += `<div class="m3-card">`;
@@ -386,13 +415,68 @@
                     });
                     cardsHTML += `</div>`;
                 } else if (card.type === 'contact') {
-                    cardsHTML += `<div class="contact-text">${card.content}</div>`;
+                    // 【新逻辑】遍历数组，自动生成列表
+                    cardsHTML += `<div class="contact-list">`;
+                    card.content.forEach(item => {
+                        cardsHTML += `<div class="contact-item">`;
+                        cardsHTML += `<span class="contact-label">${item.name}：</span>`;
+                        cardsHTML += `<span class="contact-value">`;
+                        if (item.link) {
+                            cardsHTML += `<a href="${item.link}" target="_blank">${item.value}</a>`;
+                        } else {
+                            cardsHTML += item.value;
+                        }
+                        cardsHTML += `</span></div>`;
+                    });
+                    cardsHTML += `</div>`;
                 }
                 
                 cardsHTML += `</div>`;
             });
             
             container.innerHTML = profileHTML + cardsHTML;
+        }
+
+        // --- 背景图片初始化与轮播逻辑 ---
+        function initBackground() {
+            const bgConfig = SITE_CONFIG.background;
+            if (!bgConfig || !bgConfig.enable || !bgConfig.images || bgConfig.images.length === 0) return;
+
+            document.documentElement.style.setProperty('--bg-opacity', bgConfig.opacity);
+            document.documentElement.style.setProperty('--bg-blur', `${bgConfig.blur}px`);
+
+            const fitMap = {
+                "cover": "cover", "contain": "contain", "auto": "auto", "fill": "100% 100%"
+            };
+            const bgSize = fitMap[bgConfig.fit] || "cover";
+
+            const layers = [document.getElementById('bgLayer1'), document.getElementById('bgLayer2')];
+            let currentLayer = 0;
+            let currentIndex = 0;
+
+            function setLayerImage(layer, index) {
+                layer.style.backgroundImage = `url('${bgConfig.images[index]}')`;
+                layer.style.backgroundSize = bgSize;
+            }
+
+            setLayerImage(layers[currentLayer], currentIndex);
+            layers[currentLayer].classList.add('active');
+
+            if (bgConfig.images.length > 1) {
+                setInterval(() => {
+                    const nextIndex = (currentIndex + 1) % bgConfig.images.length;
+                    const nextLayer = 1 - currentLayer;
+                    
+                    setLayerImage(layers[nextLayer], nextIndex);
+                    
+                    setTimeout(() => {
+                        layers[currentLayer].classList.remove('active');
+                        layers[nextLayer].classList.add('active');
+                        currentLayer = nextLayer;
+                        currentIndex = nextIndex;
+                    }, 50);
+                }, bgConfig.interval * 1000);
+            }
         }
 
         // --- 主题切换逻辑 ---
@@ -431,7 +515,7 @@
             const rippleTargets = document.querySelectorAll('.m3-card, .m3-chip, .m3-list-item, .theme-btn, .fab-settings, .settings-panel');
             rippleTargets.forEach(el => {
                 el.addEventListener('pointerdown', function(e) {
-                    if (this.classList.contains('m3-card') && e.target.closest('.m3-chip, .m3-list-item')) return; 
+                    if (this.classList.contains('m3-card') && e.target.closest('.m3-chip, .m3-list-item, .contact-item')) return; 
                     if (this.classList.contains('settings-panel') && e.target.closest('.theme-btn')) return; 
 
                     const rect = this.getBoundingClientRect();
@@ -646,6 +730,7 @@
             initSettingsPanel();   
             initRipple();          
             initAvatarWave(); 
+            initBackground(); 
             startAnimationTimeline(); 
         });
     </script>
