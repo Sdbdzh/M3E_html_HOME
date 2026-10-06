@@ -42,9 +42,3 @@
 
 ---
 
-## 🚀 快速开始
-
-### 1. 克隆项目
-```bash
-git clone https://github.com/sdbdzh/M3Ehtml-Personal-Homepage.git
-cd M3Ehtml-Personal-Homepage
