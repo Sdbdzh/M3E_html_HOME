@@ -42,3 +42,23 @@
 
 ---
 
+## 🚀 快速开始
+
+### 1. 克隆项目
+```bash
+git clone https://github.com/Sdbdzh/M3E_html_HOME.git
+cd M3E_html_HOME
+
+###2. 准备素材
+在项目根目录准备以下文件（或修改配置中的路径指向你的文件）：
+
+头像：命名为 tx.jpg（支持 jpg / png / webp）。
+
+网站图标：命名为 favicon.ico（支持 ico / png / svg）。
+
+###3. 本地预览
+直接双击打开 index.html 即可在浏览器中查看效果。
+
+
+⚙️ 详细配置指南
+打开 index.html，找到 <script> 标签最顶部的 SITE_CONFIG 对象。所有的页面内容和动画速度都在这里修改。
