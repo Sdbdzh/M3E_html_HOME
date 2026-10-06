@@ -10,7 +10,7 @@
 
 - **在线演示**：[https://sdbdzh.github.io/M3Ehtml-Personal-Homepage/](https://sdbdzh.github.io/M3Ehtml-Personal-Homepage/)
 - **作者 GitHub**：[@sdbdzh](https://github.com/sdbdzh)
-- **项目仓库**：[sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/sdbdzh/M3Ehtml-Personal-Homepage)
+- **项目仓库**：[[sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME)]([https://github.com/sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME))
 
 ---
 
