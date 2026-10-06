@@ -8,7 +8,7 @@
 
 一个基于纯原生 HTML / CSS / JavaScript 构建的类 Android 12+ **M3E (Material 3 Expressive)** 风格个人主页。无需构建工具，单文件即可运行，所有内容高度集中配置，非常适合作为开发者的个人名片或卡片式主页。
 
-- **在线演示**：[https://sdbdzh.github.io/M3Ehtml-Personal-Homepage/](https://sdbdzh.github.io/M3Ehtml-Personal-Homepage/)
+- **在线演示**：[enik.de5.net](https://enik.de5.net/)
 - **作者 GitHub**：[@sdbdzh](https://github.com/sdbdzh)
 - **项目仓库**：[[sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME)]([https://github.com/sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME))
 
