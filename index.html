@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 网站标题和图标改为动态设置，避免硬编码 -->
+    <title id="pageTitle">加载中...</title>
+    <link id="pageFavicon" rel="icon" href="data:,">
+    
+    <style>
+        /* =========================================
+           M3E 粉色色彩系统 (Material You)
+           ========================================= */
+        :root[data-theme="light"] {
+            --md-sys-color-background: #FFF8F8;
+            --md-sys-color-on-background: #201A1A;
+            --md-sys-color-surface-container-low: #FCEAEB;
+            --md-sys-color-surface-container: #F7E4E6;
+            --md-sys-color-surface-container-high: #F1DFE0;
+            
+            --md-sys-color-on-surface: #201A1A;
+            --md-sys-color-on-surface-variant: #524347;
+            --md-sys-color-outline: #857377;
+            --md-sys-color-outline-variant: #D8C2C6;
+            
+            --md-sys-color-primary: #984061;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #FFD9E2;
+            --md-sys-color-on-primary-container: #3E001D;
+            
+            --md-sys-color-ripple: rgba(152, 64, 97, 0.15);
+            --md-sys-color-state-layer: rgba(152, 64, 97, 0.08);
+            --md-sys-elevation-1: 0 4px 12px rgba(152, 64, 97, 0.08);
+            --md-sys-elevation-2: 0 8px 24px rgba(152, 64, 97, 0.12);
+
+            --card-charge-brightness: 1.15;
+            --wave-color: rgba(152, 64, 97, 0.15);
+        }
+
+        :root[data-theme="dark"] {
+            --md-sys-color-background: #1A1112;
+            --md-sys-color-on-background: #EDE0E2;
+            --md-sys-color-surface-container-low: #221719;
+            --md-sys-color-surface-container: #291D20; 
+            --md-sys-color-surface-container-high: #34282A;
+            
+            --md-sys-color-on-surface: #EDE0E2;
+            --md-sys-color-on-surface-variant: #D8C2C6;
+            --md-sys-color-outline: #A08C8F;
+            --md-sys-color-outline-variant: #524347;
+            
+            --md-sys-color-primary: #FFB0C9;
+            --md-sys-color-on-primary: #5E1133;
+            --md-sys-color-primary-container: #7B2949;
+            --md-sys-color-on-primary-container: #FFD9E2;
+            
+            --md-sys-color-ripple: rgba(255, 176, 201, 0.2);
+            --md-sys-color-state-layer: rgba(255, 176, 201, 0.12);
+            --md-sys-elevation-1: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --md-sys-elevation-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+            --card-charge-brightness: 1.3;
+            --wave-color: rgba(255, 176, 201, 0.25);
+        }
+
+        /* =========================================
+           基础布局与 M3 字体排印
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 40px 20px;
+            overflow-x: hidden;
+            transition: background-color 0.4s cubic-bezier(0.2, 0, 0, 1), color 0.4s cubic-bezier(0.2, 0, 0, 1);
+            
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+        }
+
+        .app-container {
+            width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px;
+            padding-top: 60px; 
+        }
+
+        /* 启动时的水波纹（充能光晕） */
+        .startup-overlay {
+            position: fixed; bottom: -50vmax; left: 50%;
+            transform: translate(-50%, 0) scale(0.1); width: 100vmax; height: 100vmax;
+            border-radius: 50%; background: radial-gradient(circle, var(--wave-color) 0%, transparent 70%);
+            opacity: 0; pointer-events: none; z-index: 99999; will-change: transform, opacity;
+        }
+        .startup-overlay.animate { animation: waveUp 1.4s cubic-bezier(0.2, 0, 0, 1) forwards; }
+        @keyframes waveUp {
+            0% { transform: translate(-50%, 0) scale(0.1); opacity: 0.9; }
+            100% { transform: translate(-50%, -20vmax) scale(2.5); opacity: 0; }
+        }
+
+        /* =========================================
+           点击头像时的水波纹
+           ========================================= */
+        .avatar-wave-overlay {
+            position: fixed; border-radius: 50%;
+            background: radial-gradient(circle, var(--wave-color) 0%, transparent 70%);
+            pointer-events: none; z-index: 99998;
+            transform: translate(-50%, -50%) scale(0); opacity: 0;
+            will-change: transform, opacity;
+        }
+        .avatar-wave-overlay.animate { animation: avatarWaveUp 1.2s cubic-bezier(0.2, 0, 0, 1) forwards; }
+        @keyframes avatarWaveUp {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        /* =========================================
+           卡片的初始状态与过渡
+           ========================================= */
+        .m3-card {
+            background-color: var(--md-sys-color-surface-container); border-radius: 28px; padding: 24px; 
+            display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
+            
+            opacity: 0; transform: translateY(60px);
+            transition: 
+                opacity 0.8s cubic-bezier(0.2, 0, 0, 1), 
+                transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                background-color 0.3s cubic-bezier(0.2, 0, 0, 1),
+                filter 0.8s ease-out,
+                box-shadow 0.8s ease-out;
+        }
+        .m3-card.appeared { opacity: 1; transform: translateY(0); }
+
+        .m3-card > *:not(.ripple) {
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.5s cubic-bezier(0.2, 0, 0, 1), transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .m3-card.charged > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        .m3-card.charged > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
+        .m3-card.charged > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
+        .m3-card.charged > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
+        .m3-card.charging { filter: brightness(var(--card-charge-brightness)); box-shadow: 0 0 20px var(--md-sys-color-primary-container); }
+
+        /* =========================================
+           个人资料区
+           ========================================= */
+        .profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 16px 0 24px 0; }
+        
+        .avatar-box {
+            width: 120px; height: 120px; border-radius: 50%; overflow: hidden; margin-bottom: 16px;
+            border: 4px solid var(--md-sys-color-surface-container); background-color: var(--md-sys-color-surface-container);
+            opacity: 0; transform: scale(0.6); filter: blur(12px);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.8s ease, border-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .avatar-box.show { opacity: 1; transform: scale(1); filter: blur(0); }
+        .avatar-box:hover { transform: translateY(-4px) scale(1.05); border-color: var(--md-sys-color-primary); box-shadow: var(--md-sys-elevation-1); }
+        .avatar-box:active { transform: translateY(0) scale(0.95); }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .profile-header h1, .profile-header .subtitle {
+            visibility: hidden; display: flex; align-items: center; justify-content: center; min-height: 1.2em;
+        }
+        .profile-header h1.typing-active, .profile-header .subtitle.typing-active { visibility: visible; }
+        
+        .cursor {
+            display: inline-block; width: 2px; height: 1.1em; background-color: var(--md-sys-color-primary);
+            margin-left: 6px; animation: blink 0.75s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        .profile-header h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .profile-header .subtitle { font-size: 15px; color: var(--md-sys-color-on-surface-variant); }
+
+        /* 内容区块 */
+        .m3-card-title { font-size: 14px; font-weight: 600; color: var(--md-sys-color-primary); letter-spacing: 0.5px; text-transform: uppercase; }
+        .m3-card-content { font-size: 15px; line-height: 1.6; color: var(--md-sys-color-on-surface); }
+
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .m3-chip {
+            background-color: transparent; border: 1px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface-variant); padding: 8px 18px; border-radius: 100px; font-size: 14px; font-weight: 500;
+            position: relative; overflow: hidden; transition: all 0.2s cubic-bezier(0.2, 0, 0, 1); cursor: default;
+        }
+        .m3-chip:hover { background-color: var(--md-sys-color-state-layer); border-color: var(--md-sys-color-primary); }
+
+        .m3-list { display: flex; flex-direction: column; margin-top: 8px; }
+        .m3-list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 8px; text-decoration: none; color: var(--md-sys-color-on-surface); font-size: 15px; font-weight: 500;
+            position: relative; overflow: hidden; background-color: transparent;
+            transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1); border-radius: 12px;
+        }
+        .m3-list-item:hover { background-color: var(--md-sys-color-state-layer); }
+        .m3-list-item:not(:last-child)::after {
+            content: ''; position: absolute; bottom: 0; left: 8px; right: 8px; height: 1px;
+            background-color: var(--md-sys-color-outline-variant); opacity: 0.5;
+        }
+        .m3-list-item .arrow { color: var(--md-sys-color-on-surface-variant); font-family: monospace; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s; }
+        .m3-list-item:hover .arrow { transform: translateX(6px); color: var(--md-sys-color-primary); }
+
+        .contact-text { font-size: 14px; color: var(--md-sys-color-on-surface-variant); word-break: break-all; -webkit-user-select: text; user-select: text; }
+        .contact-text a { color: var(--md-sys-color-primary); text-decoration: none; font-weight: 500; transition: opacity 0.2s; }
+        .contact-text a:hover { opacity: 0.8; }
+
+        /* 水波纹反馈 */
+        .ripple {
+            position: absolute; border-radius: 50%; transform: scale(0);
+            animation: ripple-anim 600ms cubic-bezier(0.2, 0, 0, 1) forwards;
+            background-color: var(--md-sys-color-ripple); pointer-events: none; will-change: transform, opacity;
+        }
+        @keyframes ripple-anim { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        /* =========================================
+           设置按钮
+           ========================================= */
+        .fab-settings {
+            position: fixed; top: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
+            background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
+            border: none; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            box-shadow: var(--md-sys-elevation-1); z-index: 1000;
+            opacity: 0; transform: scale(0.5) translateY(30px); filter: blur(10px);
+            transition: 
+                opacity 0.8s cubic-bezier(0.2, 0, 0, 1), 
+                transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                filter 0.8s ease,
+                background-color 0.3s, border-radius 0.3s, box-shadow 0.3s;
+        }
+        .fab-settings.appeared { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+        .fab-settings.charging { filter: brightness(var(--card-charge-brightness)); box-shadow: 0 0 20px var(--md-sys-color-primary-container); }
+        .fab-settings.appeared:hover { transform: translateY(-4px) scale(1.05); border-radius: 50%; box-shadow: var(--md-sys-elevation-2); }
+        .fab-settings.appeared:active { transform: translateY(0) scale(1); }
+        .fab-settings svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* 设置面板 */
+        .settings-panel {
+            position: fixed; top: 90px; right: 24px; width: 260px;
+            background-color: var(--md-sys-color-surface-container-high); border-radius: 24px; padding: 20px;
+            box-shadow: var(--md-sys-elevation-2); z-index: 999; display: flex; flex-direction: column; gap: 16px;
+            transform-origin: top right; transform: scale(0.9) translateY(-10px); opacity: 0; pointer-events: none;
+            overflow: hidden; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+        }
+        .settings-panel.show { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
+
+        .panel-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--md-sys-color-on-surface-variant); font-family: monospace; margin-bottom: 4px; }
+        .theme-group { display: flex; background-color: var(--md-sys-color-surface-container-low); border-radius: 100px; padding: 4px; position: relative; }
+        .theme-btn {
+            flex: 1; background: transparent; border: none; color: var(--md-sys-color-on-surface-variant);
+            font-size: 13px; padding: 10px 0; border-radius: 100px; cursor: pointer; font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1); position: relative; overflow: hidden;
+        }
+        .theme-btn.active { background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+
+        @media (max-width: 600px) {
+            .profile-header h1 { font-size: 26px; }
+            .settings-panel { top: auto; bottom: 24px; right: 16px; left: 16px; width: auto; transform-origin: bottom center; transform: scale(0.9) translateY(20px); }
+            .settings-panel.show { transform: scale(1) translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 启动充能水波纹 -->
+    <div class="startup-overlay" id="startupOverlay"></div>
+
+    <!-- 设置按钮与面板 -->
+    <button class="fab-settings" id="settingsBtn" aria-label="打开设置">
+        <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+    </button>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div>
+            <div class="panel-title">外观主题</div>
+            <div class="theme-group" id="themeGroup">
+                <button class="theme-btn" data-theme="system">系统</button>
+                <button class="theme-btn" data-theme="light">浅色</button>
+                <button class="theme-btn" data-theme="dark">深色</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区：将由 JS 自动生成 -->
+    <div class="app-container" id="appContainer"></div>
+
+    <script>
+        /* =================================================================
+           ★★★ 1. 所有可修改的参数集中在这里（你只需要改这个区域！） ★★★
+           ================================================================= */
+        const SITE_CONFIG = {
+            // 网站全局配置（新增）
+            site: {
+                name: "Enikawa_Official",            // 浏览器标签页显示的网站名字
+                favicon: "./tx.jpg"              // 网站图标路径（可以是 .ico, .png 等）
+            },
+
+            // 个人资料配置
+            profile: {
+                name: "Enikawa_Official",            // 你的名字
+                nameTypeSpeed: 100,                   // 名字打字速度（毫秒/字，越小越快）
+                nameCursorDelay: 1000,                // 名字打完后光标延迟消失时间（毫秒）
+                avatarSrc: "./tx.jpg",                // 头像路径
+                signaturePause: 2,                    // 【核心】签名循环间隔时间（秒，指打完停留几秒后开始删除）
+                signatureTypeSpeed: 60,               // 签名打字速度（毫秒/字）
+                signatureDeleteSpeed: 30,             // 签名删除速度（毫秒/字）
+                // 签名预设（可以写多个，会自动无限循环切换）
+                signatures: [
+                    "[预设签名 1，带点极客风格]",
+                    "[热爱代码与生活的开发者]",
+                    "[你的签名 / 职业 / 个人格言]"
+                ]
+            },
+            
+            // 卡片配置（自动生成页面上的所有卡片）
+            cards: [
+                {
+                    title: "关于我",
+                    type: "text",                     // 类型：普通文本
+                    content: "[在这里写下关于你自己的介绍。爱好是什么？最近在做什么？随便写，这里是你的地盘。]"
+                },
+                {
+                    title: "兴趣与偏好",
+                    type: "chips",                    // 类型：标签药丸
+                    content: ["[爱好 1]", "[爱好 2]", "[爱好 3]", "[爱好 4]", "[爱好 5]"]
+                },
+                {
+                    title: "网站导航",
+                    type: "list",                     // 类型：链接列表
+                    content: [
+                        { name: "[你的 GitHub]", url: "https://github.com" },
+                        { name: "[你的博客]", url: "#" },
+                        { name: "[你的 Bilibili]", url: "#" }
+                    ]
+                },
+                {
+                    title: "联系方式",
+                    type: "contact",                  // 类型：联系方式（此区域文本可选中复制）
+                    content: "邮箱：<a href='mailto:your@email.com'>your@email.com</a><br>微信：your_wechat_id"
+                }
+            ]
+        };
+        /* ================================================================= */
+
+        /* =========================================
+           2. 以下全是引擎代码，不需要修改
+           ========================================= */
+        
+        // --- 渲染页面内容 ---
+        function renderPage() {
+            const container = document.getElementById('appContainer');
+            const { site, profile, cards } = SITE_CONFIG;
+            
+            // 1. 动态设置网站标题和图标
+            if (site) {
+                if (site.name) document.getElementById('pageTitle').innerText = site.name;
+                if (site.favicon) document.getElementById('pageFavicon').href = site.favicon;
+            }
+
+            // 2. 渲染个人资料区
+            let profileHTML = `
+                <div class="profile-header">
+                    <div class="avatar-box" id="avatarBox">
+                        <img src="${profile.avatarSrc}" alt="${profile.name}" onerror="this.style.display='none'; this.parentElement.style.background='var(--md-sys-color-primary-container)';">
+                    </div>
+                    <h1 id="profileName"></h1>
+                    <div class="subtitle" id="profileSubtitle"></div>
+                </div>
+            `;
+            
+            // 3. 渲染卡片区
+            let cardsHTML = '';
+            cards.forEach(card => {
+                cardsHTML += `<div class="m3-card">`;
+                cardsHTML += `<div class="m3-card-title">${card.title}</div>`;
+                
+                if (card.type === 'text') {
+                    cardsHTML += `<div class="m3-card-content">${card.content}</div>`;
+                } else if (card.type === 'chips') {
+                    cardsHTML += `<div class="chips-container">`;
+                    card.content.forEach(chip => {
+                        cardsHTML += `<span class="m3-chip">${chip}</span>`;
+                    });
+                    cardsHTML += `</div>`;
+                } else if (card.type === 'list') {
+                    cardsHTML += `<div class="m3-list">`;
+                    card.content.forEach(item => {
+                        cardsHTML += `<a href="${item.url}" class="m3-list-item" target="_blank"><span>${item.name}</span><span class="arrow">-></span></a>`;
+                    });
+                    cardsHTML += `</div>`;
+                } else if (card.type === 'contact') {
+                    cardsHTML += `<div class="contact-text">${card.content}</div>`;
+                }
+                
+                cardsHTML += `</div>`;
+            });
+            
+            container.innerHTML = profileHTML + cardsHTML;
+        }
+
+        // --- 主题切换逻辑 ---
+        function initTheme() {
+            const root = document.documentElement;
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            let currentThemeSetting = localStorage.getItem('theme') || 'system';
+
+            function applyTheme() {
+                let themeToApply = currentThemeSetting === 'system' ? (mediaQuery.matches ? 'dark' : 'light') : currentThemeSetting;
+                root.setAttribute('data-theme', themeToApply);
+                document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.theme === currentThemeSetting));
+            }
+
+            mediaQuery.addEventListener('change', () => { if (currentThemeSetting === 'system') applyTheme(); });
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentThemeSetting = e.target.dataset.theme;
+                    localStorage.setItem('theme', currentThemeSetting);
+                    applyTheme();
+                });
+            });
+            applyTheme();
+        }
+
+        // --- 设置面板逻辑 ---
+        function initSettingsPanel() {
+            const fab = document.getElementById('settingsBtn');
+            const panel = document.getElementById('settingsPanel');
+            fab.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('show'); });
+            document.addEventListener('click', (e) => { if (!panel.contains(e.target) && !fab.contains(e.target)) panel.classList.remove('show'); });
+        }
+
+        // --- 点击水波纹逻辑 ---
+        function initRipple() {
+            const rippleTargets = document.querySelectorAll('.m3-card, .m3-chip, .m3-list-item, .theme-btn, .fab-settings, .settings-panel');
+            rippleTargets.forEach(el => {
+                el.addEventListener('pointerdown', function(e) {
+                    if (this.classList.contains('m3-card') && e.target.closest('.m3-chip, .m3-list-item')) return; 
+                    if (this.classList.contains('settings-panel') && e.target.closest('.theme-btn')) return; 
+
+                    const rect = this.getBoundingClientRect();
+                    const diameter = Math.max(rect.width, rect.height);
+                    const radius = diameter / 2;
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    ripple.style.width = ripple.style.height = `${diameter}px`;
+                    ripple.style.left = `${e.clientX - rect.left - radius}px`;
+                    ripple.style.top = `${e.clientY - rect.top - radius}px`;
+
+                    if (this.querySelector('.ripple')) this.querySelector('.ripple').remove();
+                    this.appendChild(ripple);
+                    setTimeout(() => { if (ripple.parentNode) ripple.remove(); }, 600);
+                });
+            });
+        }
+
+        // --- 打字机逻辑 ---
+        function typeName(element, text, speed, cursorDelay) {
+            element.classList.add('typing-active');
+            element.innerHTML = '';
+            const textSpan = document.createElement('span');
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            element.appendChild(textSpan);
+            element.appendChild(cursor);
+
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    textSpan.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    setTimeout(() => { cursor.remove(); }, cursorDelay);
+                }
+            }
+            type();
+        }
+
+        function loopSignatures(element, texts, typeSpeed, deleteSpeed, pauseTimeMs) {
+            element.classList.add('typing-active');
+            element.innerHTML = '';
+            const textSpan = document.createElement('span');
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            element.appendChild(textSpan);
+            element.appendChild(cursor);
+
+            let textIndex = 0, charIndex = 0, isDeleting = false;
+
+            function process() {
+                const currentText = texts[textIndex];
+                
+                if (isDeleting) {
+                    charIndex--;
+                    textSpan.textContent = currentText.substring(0, charIndex);
+                    if (charIndex === 0) {
+                        isDeleting = false;
+                        textIndex = (textIndex + 1) % texts.length;
+                        setTimeout(process, 600);
+                    } else {
+                        setTimeout(process, deleteSpeed);
+                    }
+                } else {
+                    charIndex++;
+                    textSpan.textContent = currentText.substring(0, charIndex);
+                    if (charIndex === currentText.length) {
+                        isDeleting = true;
+                        setTimeout(process, pauseTimeMs); 
+                    } else {
+                        setTimeout(process, typeSpeed);
+                    }
+                }
+            }
+            process();
+        }
+
+        // --- 点击头像触发水波纹并点亮元素 ---
+        function initAvatarWave() {
+            const avatarBox = document.getElementById('avatarBox');
+            const cards = document.querySelectorAll('.m3-card');
+            const fabSettings = document.getElementById('settingsBtn');
+
+            avatarBox.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const existingWave = document.querySelector('.avatar-wave-overlay');
+                if (existingWave) existingWave.remove();
+
+                const maxDistance = Math.max(
+                    Math.hypot(centerX, centerY),
+                    Math.hypot(window.innerWidth - centerX, centerY),
+                    Math.hypot(centerX, window.innerHeight - centerY),
+                    Math.hypot(window.innerWidth - centerX, window.innerHeight - centerY)
+                );
+                const diameter = maxDistance * 2;
+
+                const wave = document.createElement('div');
+                wave.className = 'avatar-wave-overlay animate';
+                wave.style.width = `${diameter}px`;
+                wave.style.height = `${diameter}px`;
+                wave.style.left = `${centerX}px`;
+                wave.style.top = `${centerY}px`;
+                
+                document.body.appendChild(wave);
+
+                const duration = 1200;
+                const targets = [...cards, fabSettings];
+                targets.forEach(target => {
+                    const targetRect = target.getBoundingClientRect();
+                    const targetCenterX = targetRect.left + targetRect.width / 2;
+                    const targetCenterY = targetRect.top + targetRect.height / 2;
+                    
+                    const distance = Math.hypot(targetCenterX - centerX, targetCenterY - centerY);
+                    
+                    if (distance <= maxDistance) {
+                        const delay = (distance / maxDistance) * duration;
+                        
+                        setTimeout(() => {
+                            target.classList.add('charging');
+                            setTimeout(() => { target.classList.remove('charging'); }, 800);
+                        }, delay);
+                    }
+                });
+
+                setTimeout(() => { wave.remove(); }, duration);
+            });
+        }
+
+        // --- 启动动画时间轴 ---
+        function startAnimationTimeline() {
+            setTimeout(() => {
+                const overlay = document.getElementById('startupOverlay');
+                const cards = Array.from(document.querySelectorAll('.m3-card'));
+                const fabSettings = document.getElementById('settingsBtn');
+                const screenHeight = window.innerHeight;
+                
+                overlay.classList.add('animate');
+                
+                let maxDelay = 0;
+
+                cards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    const distanceFromBottom = screenHeight - rect.bottom;
+                    
+                    const delay = Math.max(0, Math.min(1200, (distanceFromBottom / screenHeight) * 1400));
+                    if (delay > maxDelay) maxDelay = delay;
+
+                    setTimeout(() => {
+                        card.classList.add('appeared');
+                        setTimeout(() => {
+                            card.classList.add('charging');
+                            setTimeout(() => { card.classList.add('charged'); }, 300);
+                            setTimeout(() => { card.classList.remove('charging'); }, 800);
+                        }, 150);
+                    }, delay);
+                });
+
+                const fabRect = fabSettings.getBoundingClientRect();
+                const fabDistanceFromBottom = screenHeight - fabRect.bottom;
+                const fabDelay = Math.max(0, Math.min(1200, (fabDistanceFromBottom / screenHeight) * 1400));
+
+                setTimeout(() => {
+                    fabSettings.classList.add('appeared');
+                    setTimeout(() => {
+                        fabSettings.classList.add('charging');
+                        setTimeout(() => { fabSettings.classList.remove('charging'); }, 800);
+                    }, 150);
+                }, fabDelay);
+
+                const totalCardsTime = maxDelay + 150 + 800 + 500; 
+
+                setTimeout(() => {
+                    const avatarBox = document.getElementById('avatarBox');
+                    avatarBox.classList.add('show');
+
+                    setTimeout(() => {
+                        const nameEl = document.getElementById('profileName');
+                        const subtitleEl = document.getElementById('profileSubtitle');
+                        const profileConf = SITE_CONFIG.profile;
+
+                        typeName(nameEl, profileConf.name, profileConf.nameTypeSpeed, profileConf.nameCursorDelay);
+
+                        const nameTotalTime = (profileConf.name.length * profileConf.nameTypeSpeed) + profileConf.nameCursorDelay + 300;
+
+                        setTimeout(() => {
+                            if (profileConf.signatures && profileConf.signatures.length > 0) {
+                                const pauseMs = profileConf.signaturePause * 1000; 
+                                loopSignatures(
+                                    subtitleEl, 
+                                    profileConf.signatures, 
+                                    profileConf.signatureTypeSpeed, 
+                                    profileConf.signatureDeleteSpeed, 
+                                    pauseMs
+                                );
+                            }
+                        }, nameTotalTime);
+
+                    }, 800); 
+                }, totalCardsTime);
+            }, 100);
+        }
+
+        // --- 初始化总入口 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPage();          
+            initTheme();           
+            initSettingsPanel();   
+            initRipple();          
+            initAvatarWave(); 
+            startAnimationTimeline(); 
+        });
+    </script>
+</body>
+</html>
