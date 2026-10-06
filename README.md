@@ -10,16 +10,16 @@
 
 - **在线演示**：[enik.de5.net](https://enik.de5.net/)
 - **作者 GitHub**：[@sdbdzh](https://github.com/sdbdzh)
-- **项目仓库**：[[sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME)]([https://github.com/sdbdzh/M3Ehtml-Personal-Homepage](https://github.com/Sdbdzh/M3E_html_HOME))
+- **项目仓库**：[Sdbdzh/M3E_html_HOME](https://github.com/Sdbdzh/M3E_html_HOME)
 
 ---
 
 ## 📸 预览截图
 
-> 请将你的页面截图命名为 `preview.png` 并放在项目根目录，然后在此处替换下方的链接。
+
 
 ![页面预览](./preview.png)
-*(建议上传一张浅色模式、一张深色模式的截图)*
+
 
 ---
 
