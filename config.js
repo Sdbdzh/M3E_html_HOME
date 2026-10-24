@@ -9,8 +9,8 @@ const SITE_CONFIG = {
     // 网站全局配置
     // ==========================================
     site: {
-        name: "Enikawa_Official",            // 【必填】浏览器标签页显示的网站名字
-        favicon: "./favicon.ico"              // 【必填】网站图标路径（支持 ico / png / svg）
+        name: "Enikawa_Official HOME",            // 【必填】浏览器标签页显示的网站名字
+        favicon: "./tx.jpg"              // 【必填】网站图标路径（支持 ico / png / svg）
     },
 
     // ==========================================
@@ -19,12 +19,11 @@ const SITE_CONFIG = {
     background: {
         enable: true,                         // 【开关】true 启用背景图，false 关闭背景图
         images: [                             // 【壁纸列表】支持多张图片自动轮播
-            "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop"
+            "1.png"
         ],
         interval: 5,                          // 【轮播间隔】单位：秒（建议 >= 3 秒）
-        blur: 5,                              // 【模糊度】单位：px（0 为不模糊，推荐 3~10）
-        opacity: 0.15,                        // 【透明度】0.0 ~ 1.0（推荐 0.1~0.3，避免影响卡片阅读）
+        blur: 0,                              // 【模糊度】单位：px（0 为不模糊，推荐 3~10）
+        opacity: 0.5,                        // 【透明度】0.0 ~ 1.0（推荐 0.1~0.3，避免影响卡片阅读）
         fit: "cover"                          // 【对齐方式】cover(放大) / contain(裁剪) / auto(自适应) / fill(拉伸)
     },
 
@@ -40,9 +39,13 @@ const SITE_CONFIG = {
         signatureTypeSpeed: 60,               // 【签名打字速度】毫秒/字（越小越快）
         signatureDeleteSpeed: 30,             // 【签名删除速度】毫秒/字（越小越快）
         signatures: [                         // 【签名列表】支持多条签名无限循环播放
-            "[预设签名 1，带点极客风格]",
-            "[热爱代码与生活的开发者]",
-            "[你的签名 / 职业 / 个人格言]"
+            "awa",
+			"Enik-->Эник",
+            "初三牲",
+            "性染色体:XY",
+			"Энику очень нравятся песни АДЛИН.",
+			"Atri: My Dear Moments",
+			"沉默是金但金太多也沉"
         ]
     },
 
@@ -52,20 +55,45 @@ const SITE_CONFIG = {
     cards: [
         // ----- 卡片类型 1：纯文本卡片 -----
         {
-            title: "关于我",                   // 【标题】卡片左上角显示的文字
+            title: "关于我/Enik/Эник",                   // 【标题】卡片左上角显示的文字
             type: "text",                     // 【类型】固定为 "text"
-            content: "[在这里写下关于你自己的介绍。爱好是什么？最近在做什么？随便写，这里是你的地盘。]"
+            content: "性染色体:XY | 初三牲 | АДЛИН循环中 | 折腾X86比写作业积极 | C#&py半吊子 | 大部分时间在听，偶尔想说点什么 | 夜行生物，白天靠电脑续命"
         },
         // ----- 卡片类型 2：标签药丸卡片 -----
         {
             title: "兴趣与偏好",               // 【标题】
             type: "chips",                    // 【类型】固定为 "chips"
             content: [                        // 【内容】填写字符串数组
-                "[爱好 1]",
-                "[爱好 2]",
-                "[爱好 3]",
-                "[爱好 4]",
-                "[爱好 5]"
+                "X86",
+				"Windows",
+				"Android安卓",
+				"AOSP",
+				"Material You",
+                "老电脑复活",
+                "图吧垃圾佬",
+                "装机",
+                "Linux折腾",
+				"OpenWRT软路由",
+				"C#",
+				"Python",
+				"Kali脚本小子",
+				"系统重装",
+				"АДЛИН",
+				"俄语歌",
+				"Miku术曲",
+				"PHONK",
+				"后朋克",
+				"内向",
+				"夜行生物",
+				"慢热",
+				"偶尔冒泡",
+				"白天靠电脑续命",
+				"哔哩哔哩 (゜-゜)つロ 干杯~-bilibili",
+				"YouTube",
+				"Google",
+				"Microsoft",
+				"OpenWRT",
+				"Rainyun"
             ]
         },
         // ----- 卡片类型 3：链接列表卡片 -----
@@ -73,9 +101,10 @@ const SITE_CONFIG = {
             title: "网站导航",                 // 【标题】
             type: "list",                     // 【类型】固定为 "list"
             content: [                        // 【内容】填写对象数组
-                { name: "[你的 GitHub]", url: "https://github.com/sdbdzh" },
-                { name: "[你的博客]", url: "#" },
-                { name: "[你的 Bilibili]", url: "#" }
+                { name: "Enik的导航页", url: "https://enik.de5.net/" },
+				{name: "Enik的Blog", url: "https://blog-enik.de5.net/" },
+				{name: "Enik的QQ空间", url: "https://user.qzone.qq.com/1334204015/main" },
+				{ name: "Alist running on OpenWrt", url: "http://enik.ccwu.cc:59966/" }
             ]
         },
         // ----- 卡片类型 4：联系方式卡片（列表形式，可选中复制） -----
@@ -84,19 +113,51 @@ const SITE_CONFIG = {
             type: "contact",                  // 【类型】固定为 "contact"
             content: [                        // 【内容】填写对象数组
                 {
-                    name: "邮箱",              // 左侧标签
-                    value: "your@email.com",   // 右侧内容
-                    link: "mailto:your@email.com" // 可选，填写后自动变成可点击链接
+                    name: "QQ邮箱",              // 左侧标签
+                    value: "enikawa@qq.com",   // 右侧内容
+                    link: "mailto:enikawa@qq.com" // 可选，填写后自动变成可点击链接
+                },
+				{
+                    name: "Gmail邮箱",              // 左侧标签
+                    value: "enikqwq@gmail.com",   // 右侧内容
+                    link: "mailto:enikqwq@gmail.com" // 可选，填写后自动变成可点击链接
                 },
                 {
-                    name: "微信",
-                    value: "your_wechat_id"    // 不填 link，则为纯文本，方便手动复制
+                    name: "微信id",
+                    value: "enikawa"    // 不填 link，则为纯文本，方便手动复制
                 },
                 {
                     name: "QQ",
-                    value: "123456789"
+                    value: "1334204015"
+                },
+				{
+                    name: "BiliBili",
+                    value: "Enik的BiliBili主页",
+					link:"https://space.bilibili.com/3546656236636442"
+                },
+				{
+                    name: "telegram",
+                    value: "@enikawa",
+					link:"https://t.me/enikawa"
                 }
             ]
-        }
+        },
+				{
+    title: "技术栈",
+    type: "badges",
+    content: [
+        { name: "HTML5", img: "https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white", url: "https://developer.mozilla.org/zh-CN/docs/Web/HTML" },
+        { name: "CSS3", img: "https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white", url: "https://developer.mozilla.org/zh-CN/docs/Web/CSS" },
+        { name: "JavaScript", img: "https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black", url: "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript" },
+        { name: "MIT License", img: "https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square", url: "https://github.com/Sdbdzh/M3E_html_HOME/blob/main/LICENSE" },
+        { name: "Material You", img: "https://img.shields.io/badge/UI-Material%203%20Expressive-984061?style=flat-square", url: "https://m3.material.io/" },
+        { name: "GitHub", img: "https://img.shields.io/badge/GitHub-Sdbdzh%2FM3E__html__HOME-181717?style=flat-square&logo=github&logoColor=white", url: "https://github.com/Sdbdzh/M3E_html_HOME" }
+    ]
+},
+		{
+    title: "版权声明",
+    type: "text",
+    content: "© 2026 Enik / Эник. All Rights Reserved."
+}
     ]
 };

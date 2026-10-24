@@ -65,7 +65,13 @@
         /* =========================================
            基础布局与 M3 字体排印
            ========================================= */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            /* 禁用移动端点击时出现的默认蓝色矩形高亮（仅保留自定义 M3E 水波纹） */
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -619,7 +625,7 @@
             process();
         }
 
-        // --- 点击头像触发充能波纹并点亮周围元素 ---
+        // --- 点击头像触发充能波纹并点亮周围元素（支持屏幕外卡片滚动补触发） ---
         function initAvatarWave() {
             const avatarBox = document.getElementById('avatarBox');
             const cards = document.querySelectorAll('.m3-card');
@@ -630,15 +636,19 @@
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
 
+                // 移除已存在的波纹，防止连续点击时重叠
                 const existingWave = document.querySelector('.avatar-wave-overlay');
                 if (existingWave) existingWave.remove();
 
-                // 计算最大半径，确保波纹能覆盖到屏幕边缘
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+
+                // 计算最大半径，覆盖当前视口（用于屏幕内元素的延迟计算）
                 const maxDistance = Math.max(
                     Math.hypot(centerX, centerY),
-                    Math.hypot(window.innerWidth - centerX, centerY),
-                    Math.hypot(centerX, window.innerHeight - centerY),
-                    Math.hypot(window.innerWidth - centerX, window.innerHeight - centerY)
+                    Math.hypot(viewportWidth - centerX, centerY),
+                    Math.hypot(centerX, viewportHeight - centerY),
+                    Math.hypot(viewportWidth - centerX, viewportHeight - centerY)
                 );
                 const diameter = maxDistance * 2;
 
@@ -653,26 +663,68 @@
                 document.body.appendChild(wave);
 
                 const duration = 1200; // 波纹动画时长
-                const targets = [...cards, fabSettings]; // 被点亮的元素集合
-                targets.forEach(target => {
+                const allTargets = [...cards, fabSettings]; // 所有可能被点亮的元素
+
+                // 待处理队列：存储当前屏幕外、等待滚动进入视口后再触发的元素
+                const pendingTargets = [];
+
+                // 触发单个元素充能的辅助函数（带防重复触发保护）
+                function triggerCharge(target) {
+                    if (target.dataset.charging === 'true') return;
+                    target.dataset.charging = 'true';
+                    target.classList.add('charging');
+                    setTimeout(() => {
+                        target.classList.remove('charging');
+                        delete target.dataset.charging;
+                    }, 800);
+                }
+
+                // 遍历所有元素，按是否在视口内分流处理
+                allTargets.forEach(target => {
                     const targetRect = target.getBoundingClientRect();
-                    const targetCenterX = targetRect.left + targetRect.width / 2;
-                    const targetCenterY = targetRect.top + targetRect.height / 2;
-                    
-                    // 计算元素中心距离头像中心的距离
-                    const distance = Math.hypot(targetCenterX - centerX, targetCenterY - centerY);
-                    
-                    if (distance <= maxDistance) {
-                        // 计算被波纹扫到的延迟时间
-                        const delay = (distance / maxDistance) * duration;
-                        
-                        setTimeout(() => {
-                            target.classList.add('charging');
-                            setTimeout(() => { target.classList.remove('charging'); }, 800); // 充能时长
-                        }, delay);
+
+                    // 判断元素是否在当前视口内（带 50px 缓冲，边缘元素也算可见）
+                    const isInViewport = (
+                        targetRect.bottom > -50 && 
+                        targetRect.top < viewportHeight + 50
+                    );
+
+                    if (isInViewport) {
+                        // --- 屏幕内：按距离计算延迟，与波纹同步 ---
+                        const targetCenterX = targetRect.left + targetRect.width / 2;
+                        const targetCenterY = targetRect.top + targetRect.height / 2;
+                        const distance = Math.hypot(targetCenterX - centerX, targetCenterY - centerY);
+                        const delay = (Math.min(distance, maxDistance) / maxDistance) * duration;
+                        setTimeout(() => triggerCharge(target), delay);
+                    } else {
+                        // --- 屏幕外：加入待触发队列，等滚动进入视口时再触发 ---
+                        pendingTargets.push(target);
                     }
                 });
 
+                // 如果存在屏幕外的元素，监听滚动事件
+                if (pendingTargets.length > 0) {
+                    const scrollHandler = () => {
+                        for (let i = pendingTargets.length - 1; i >= 0; i--) {
+                            const target = pendingTargets[i];
+                            const targetRect = target.getBoundingClientRect();
+                            
+                            // 一旦元素进入视口，立刻触发充能并从队列中移除
+                            if (targetRect.bottom > -50 && targetRect.top < window.innerHeight + 50) {
+                                triggerCharge(target);
+                                pendingTargets.splice(i, 1);
+                            }
+                        }
+                        // 队列清空后，移除滚动监听，避免性能损耗
+                        if (pendingTargets.length === 0) {
+                            window.removeEventListener('scroll', scrollHandler);
+                        }
+                    };
+                    // { passive: true } 提升移动端滚动性能
+                    window.addEventListener('scroll', scrollHandler, { passive: true });
+                }
+
+                // 波纹动画结束后清理 DOM
                 setTimeout(() => { wave.remove(); }, duration);
             });
         }
