@@ -104,6 +104,7 @@ const SITE_CONFIG = {
                 { name: "Enik的导航页", url: "https://enik.de5.net/" },
 				{name: "Enik的Blog", url: "https://blog-enik.de5.net/" },
 				{name: "Enik的QQ空间", url: "https://user.qzone.qq.com/1334204015/main" },
+				{name: "Enik的telegraph-image", url: "https://fzsg.de5.net/" },
 				{ name: "Alist running on OpenWrt", url: "http://enik.ccwu.cc:59966/" }
             ]
         },
